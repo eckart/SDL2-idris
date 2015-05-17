@@ -1,0 +1,13 @@
+CC = gcc
+CFLAGS = `idris --include` `sdl2-config --cflags`
+
+sdlrun2.o: config sdlrun2.c sdlrun2.h
+
+config: .PHONY
+	echo "%flag C \"`sdl2-config --libs`\"" > Graphics/SDL2/Config.idr
+	echo "%flag C \"`sdl2-config --cflags`\"" >> Graphics/SDL2/Config.idr
+
+clean: .PHONY
+	rm sdlrun2.o
+
+.PHONY:

@@ -1,0 +1,7 @@
+package sdl2example
+
+opts = "-p effects -p sdl2" 
+
+executable = test
+main = Main
+
