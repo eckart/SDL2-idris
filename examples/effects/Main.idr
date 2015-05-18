@@ -7,9 +7,6 @@ import Graphics.Color
 import Graphics.SDL2.SDL
 import Graphics.SDL2.Effect
 
-white : Color
-white = RGBA 255 255 255 255
-
 red : Color
 red = RGBA 252 141 89 255
 
