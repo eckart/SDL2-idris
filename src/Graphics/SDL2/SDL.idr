@@ -1,20 +1,44 @@
 module Graphics.SDL2.SDL
 
+import Data.Fin
+import Graphics.Color
 import Graphics.SDL2.Config
 
 %include C "sdlrun2.h"
 %include C "SDL2/SDL.h"
 %include C "SDL2/SDL2_gfxPrimitives.h"
+%include C "SDL2/SDL_ttf.h"
 %link C "sdlrun2.o"
 %lib C "SDL2_gfx"
+%lib C "SDL2_ttf"
+
+implicit finToInt : Fin n -> Int
+finToInt fn = fromInteger $ finToInteger fn
+
 
 -- Set up a window
 
 abstract 
 data SDLWindow   = MkWindow Ptr
 
-abstract 
+public
 data SDLRenderer = MkRenderer Ptr
+
+public
+data SDLTexture = MkTexture Ptr
+
+public
+data SDLSurface = MkSurface Ptr
+
+public
+record SDLColor where
+  constructor MkColor
+  ptr : Ptr
+
+abstract 
+record SDLRect where
+  constructor MkRect
+  ptr : Ptr
 
 public
 createWindow : String -> Int -> Int -> IO SDLWindow
@@ -27,25 +51,71 @@ createRenderer : SDLWindow -> IO SDLRenderer
 createRenderer (MkWindow win) = 
   do ptr <- foreign FFI_C "createRenderer" (Ptr -> IO Ptr) win
      return (MkRenderer ptr)
+
+public
+ttfGetError : IO String
+ttfGetError = foreign FFI_C "TTF_GetError" (IO String)
+
+initTTF : IO ()
+initTTF = do ret <- foreign FFI_C "TTF_Init" (IO (Int))
+             if ret < 0 
+             then do msg <- ttfGetError
+                     putStrLn msg
+             else return () 
+
+ttfQuit : IO ()
+ttfQuit = foreign FFI_C "TTF_Quit" (IO ())  
+     
      
 public 
 startSDL : String -> Int -> Int -> IO (SDLWindow, SDLRenderer)
 startSDL title width height = do win <- createWindow title width height
                                  ren <- createRenderer win
+                                 initTTF
                                  return (win, ren)
 
 public
 renderPresent : SDLRenderer -> IO ()
 renderPresent (MkRenderer r) = foreign FFI_C "renderPresent" (Ptr -> IO()) r
- 
+
+public
+renderCopy : SDLRenderer -> SDLTexture -> (src:SDLRect) -> (target:SDLRect) -> IO Int
+renderCopy (MkRenderer r) (MkTexture t) (MkRect src) (MkRect target)
+  = foreign FFI_C "SDL_RenderCopy" (Ptr -> Ptr -> Ptr -> Ptr -> IO Int) r t src target
+
 public
 quit : IO ()
 quit = foreign FFI_C "SDL_Quit" (IO ())
 
 public
 endSDL : SDLWindow -> SDLRenderer -> IO ()
-endSDL (MkWindow win) (MkRenderer ren) = foreign FFI_C "quit" (Ptr -> Ptr -> IO ()) win ren
+endSDL (MkWindow win) (MkRenderer ren) = do ttfQuit
+                                            foreign FFI_C "quit" (Ptr -> Ptr -> IO ()) win ren
 
+-- textures
+
+public
+sdlCreateTextureFromSurface : SDLRenderer -> SDLSurface -> IO SDLTexture
+sdlCreateTextureFromSurface (MkRenderer r) (MkSurface s)
+  = do ptr <- foreign FFI_C "SDL_CreateTextureFromSurface" (Ptr -> Ptr -> IO Ptr) r s
+       return (MkTexture ptr)
+
+public
+sdlFreeSurface : SDLSurface -> IO ()
+sdlFreeSurface (MkSurface srf) = foreign FFI_C "SDL_FreeSurface" (Ptr -> IO ()) srf
+
+-- structs
+
+public
+color : Color -> IO SDLColor
+color (RGBA r g b a) = do ptr <- foreign FFI_C "color" (Int -> Int -> Int -> Int -> IO Ptr) r g b a
+                          return $ MkColor ptr
+
+public 
+rect : (x:Int) -> (y:Int) -> (w:Int) -> (h:Int) -> IO SDLRect
+rect x y w h = do ptr <- foreign FFI_C "rect" (Int -> Int -> Int -> Int -> IO Ptr) x y w h
+                  return $ MkRect ptr
+                  
 -- array helper
 
 private 
@@ -71,6 +141,13 @@ packList xs = do
   packValues arr 0 xs
   return arr
 
+public 
+nullPtr : IO Ptr
+nullPtr = foreign FFI_C "nullPtr" (IO Ptr)
+
+public 
+free : Ptr -> IO ()
+free ptr = foreign FFI_C "free" (Ptr -> IO ()) ptr
 
 -- Some drawing primitives
 
@@ -286,4 +363,5 @@ waitEvent
     = do MkRaw e <- 
             foreign FFI_C "waitEvent" (Ptr -> IO (Raw (Maybe Event))) prim__vm
          return e
+
 

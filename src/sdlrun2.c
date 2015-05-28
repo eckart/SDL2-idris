@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_ttf.h>
 
 #include <idris_rts.h>
 
@@ -49,6 +50,28 @@ void quit(void* window, void* renderer) {
   SDL_DestroyRenderer(ren);
   SDL_DestroyWindow(win);
   SDL_Quit();
+}
+
+// -----------------------------------------------------------------------------
+// structs
+
+void* color(int r, int g, int b, int a) {
+  SDL_Color* col = malloc(sizeof(SDL_Color));
+  col->r = r;
+  col->g = g;
+  col->b = b;
+  col->a = a;
+
+  return col;
+}
+
+void* rect(int x, int y, int w, int h) {
+  SDL_Rect* rect = malloc(sizeof(SDL_Rect));
+  rect->x = x;
+  rect->y = y;
+  rect->w = w;
+  rect->h = h;
+  return rect;
 }
 
 // -----------------------------------------------------------------------------
@@ -407,4 +430,47 @@ void* waitEvent(VM* vm)
   int r = SDL_WaitEvent(&event);
   
   return processEvent(vm, r, &event);
+}
+
+// -----------------------------------------------------------------------------
+// TTF wrapper
+
+void* ttfRenderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col) {
+  SDL_Surface* srf = TTF_RenderText_Solid(font, text, *col);
+  if (srf == NULL) {
+    return NULL;
+  }
+
+  SDL_Texture* tx = SDL_CreateTextureFromSurface(renderer, srf);
+  SDL_FreeSurface(srf);
+
+  return tx;
+  
+}
+
+void renderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col, int x, int y) {
+  
+  SDL_Texture* texture = ttfRenderTextSolid(renderer, font, text, col);
+  /*
+  if (renderer == NULL) {
+    printf("renderer is null\n");
+  }
+
+  if (texture == NULL) {
+    printf("texture is null\n");
+  }
+
+  if (font == NULL) {
+    printf("font is null\n");
+  }
+  */
+  SDL_Rect dst;
+  SDL_QueryTexture(texture, NULL, NULL, &dst.w, &dst.h);
+  dst.x = x;
+  dst.y = y;
+
+  SDL_RenderCopy(renderer, texture, NULL, &dst);
+
+  SDL_DestroyTexture(texture);
+
 }

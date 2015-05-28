@@ -4,16 +4,14 @@ import Data.Fin
 import Effects
 import Graphics.Color
 import public Graphics.SDL2.SDL
+import public Graphics.SDL2.SDLTTF
 
 SDLCtx : Type
 SDLCtx = (SDLWindow, SDLRenderer)
 
-{--
-Effect : Type
-Effect = (result : Type) ->
-         (input_resource : Type) ->
-         (output_resource : result -> Type) -> Type
---}
+TTFCtx : Type
+TTFCtx = SDLFont
+
 data Sdl : Effect where
      ||| creates the window + renderer. the effect has no result value, consumes no resource and
      ||| the output resource will have type SDLRenderer
@@ -27,31 +25,49 @@ data Sdl : Effect where
      ||| Convert something that produces an IO Action for the Renderer to an Effect
      |||
      WithContext : (SDLCtx -> IO a) -> Sdl a SDLCtx (\v => SDLCtx)
+     
+data Ttf : Effect where
+  OpenFont   : (fontPath : String) -> (fontsize: Int) -> Ttf () () (\r => TTFCtx)
+  CloseFont  : Ttf () TTFCtx (\v => ())
+  WithFont   : (TTFCtx -> IO a) -> Ttf a TTFCtx (\v => TTFCtx)
 
-{--
-handle : resource -> 
-         (eff : e t resource resource') ->
-         ((x : t) ->        -- return value
-           resource' x ->   -- return resource
-           m a) 
-         -> m 
---}
 instance Handler Sdl IO where
-     handle ()        (Initialise title width height) k = do ctx <- startSDL title width height
-                                                             k () ctx
-     handle (win, ren) Quit                           k = do endSDL win ren ; k () ()
-     handle (win, ren) Render                         k = do renderPresent ren; k () (win, ren)
-     handle s          Poll                           k = do x <- pollEvent; k x s
-     handle s          (WithContext f)                k = do r <- f s; k r s 
-
+  handle ()        (Initialise title width height) k = do ctx <- startSDL title width height
+                                                          k () ctx
+  handle (win, ren) Quit                           k = do endSDL win ren ; k () ()
+  handle (win, ren) Render                         k = do renderPresent ren; k () (win, ren)
+  handle s          Poll                           k = do x <- pollEvent; k x s
+  handle s          (WithContext f)                k = do r <- f s; k r s 
+     
 SDL : Type -> EFFECT
 SDL res = MkEff res Sdl
+
+TTF : Type -> EFFECT
+TTF res = MkEff res Ttf
 
 SDL_ON : EFFECT
 SDL_ON = SDL SDLCtx
 
+TTF_ON : EFFECT
+TTF_ON = TTF TTFCtx
+
+
+-- instance (Handler StdIO m, Handler System m) => Handler Logging ({
+--[STDIO, SYSTEM]} Eff () m) where
+--  handle ...
+
+instance Handler Ttf IO where
+  handle ()    (OpenFont font fontsize) k    = do ctx <- ttfOpenFont font fontsize
+                                                  k () ctx
+  handle font  CloseFont                k    = do ttfCloseFont font; k () ()
+  handle font  (WithFont f)             k    = do r <- f font; k r font 
+
+-- helper
+
 toInt : Fin n -> Int
 toInt fn = fromInteger $ finToInteger fn
+
+-- SDL general
 
 initialise : String -> Int -> Int -> { [SDL ()] ==> [SDL_ON] } Eff () 
 initialise title width height = call $ Initialise title width height
@@ -107,6 +123,24 @@ triangle : Color -> (Int, Int) -> (Int, Int) -> (Int, Int) -> { [SDL_ON] } Eff (
 triangle (RGBA r g b a) (x1, y1) (x2, y2) (x3, y3)
     = call $ WithContext (\(_,s) => filledTrigon s x1 y1 x2 y2 x3 y3 (toInt r) (toInt g) (toInt b) (toInt a))
 
-
 setRenderDrawColor : Color -> { [SDL_ON] } Eff ()
 setRenderDrawColor (RGBA r g b a) = call $ WithContext (\(_,ren) => sdlSetRenderDrawColor ren (toInt r) (toInt g) (toInt b) (toInt a))
+
+-- TTF
+openFont : String -> Int -> { [TTF ()] ==> [TTF_ON] } Eff () 
+openFont font fontsize = call $ OpenFont font fontsize
+
+closeFont : { [TTF_ON] ==> [TTF ()] } Eff () 
+closeFont = call $ CloseFont 
+
+getFont : { [TTF_ON] } Eff SDLFont
+getFont = call $ WithFont (\font => return font)
+
+renderText : String -> Color -> (Int, Int) -> { [SDL_ON, TTF_ON] ==> [SDL_ON, TTF_ON] } Eff ()
+renderText text col (x,y) = do r <- getRenderer
+                               renderText' r text col (x,y)
+                               return ()
+                            where 
+                              renderText' : SDLRenderer -> String -> Color -> (Int,Int) -> { [TTF_ON] } Eff ()
+                              renderText' r txt col (x,y) = call (WithFont (\font => renderTextSolid r font txt col x y))
+                            

@@ -2,6 +2,9 @@
 #define __SDLRUN_H
 
 #include <idris_rts.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL_ttf.h>
 
 // Start SDL, open a window with dimensions (x,y) - return the window
 void* createWindow(char* title, int xsize, int ysize);
@@ -17,6 +20,11 @@ void quit(void* window, void* renderer);
 // Events
 void* pollEvent(VM* vm); // builds an Idris value
 void* waitEvent(VM* vm); // builds an Idris value
+
+// Structs
+
+void* color(int r, int g, int b, int a);
+void* rect(int x, int y, int w, int h);
 
 // Drawing primitives
 
@@ -63,6 +71,14 @@ void bezier(void* renderer,
 void* newArray(int len);
 
 void setValue(int* arr, int idx, int val);
+
+
+// -----------------------------------------------------------------------------
+// TTF wrapper
+
+void* ttfRenderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col);
+void renderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col, int x, int y);
+
 
 
 #endif
