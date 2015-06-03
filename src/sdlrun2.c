@@ -2,7 +2,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <SDL2/SDL_ttf.h>
-
+#include <SDL2/SDL_syswm.h>
+#include <SDL2/SDL_video.h>
 #include <idris_rts.h>
 
 void* createWindow(char* title, int xsize, int ysize) {
@@ -13,7 +14,7 @@ void* createWindow(char* title, int xsize, int ysize) {
 	printf("Unable to init SDL2: %s\n", SDL_GetError());
 	return NULL;
     }
-
+    //SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
     window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			   xsize, ysize, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);
 
@@ -23,6 +24,25 @@ void* createWindow(char* title, int xsize, int ysize) {
     }
 
     return (void*) window;
+}
+
+void* createGLContext(void* window) {
+  SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+  SDL_GLContext glcontext = SDL_GL_CreateContext(window);
+  SDL_GLContext * ptr = &glcontext;
+  return (void*) ptr;
+}
+
+void deleteGLContext(void* ctx) {
+  SDL_GLContext* glContext = (SDL_GLContext*) ctx;
+  SDL_GL_DeleteContext(*glContext); 
+}
+
+
+void glMakeCurrent(void* win, void* ctx) {
+  SDL_GLContext* glContext = (SDL_GLContext*) ctx;
+  SDL_Window* window = (SDL_Window*) window;
+  SDL_GL_MakeCurrent(window, *glContext);
 }
 
 void* createRenderer(void* window) {

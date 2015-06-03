@@ -142,10 +142,6 @@ packList xs = do
   return arr
 
 public 
-nullPtr : IO Ptr
-nullPtr = foreign FFI_C "nullPtr" (IO Ptr)
-
-public 
 free : Ptr -> IO ()
 free ptr = foreign FFI_C "free" (Ptr -> IO ()) ptr
 
@@ -365,3 +361,22 @@ waitEvent
          return e
 
 
+-- ---------------------------------------------------------------------------
+-- GL 
+
+abstract
+data SDLGLContext = MkGLContext Ptr
+
+createGLContext : SDLWindow -> IO SDLGLContext
+createGLContext (MkWindow ptr) = do p <- foreign FFI_C "createGLContext" (Ptr -> IO Ptr) ptr
+                                    pure $ MkGLContext p
+  
+deleteGLContext : SDLGLContext -> IO ()
+deleteGLContext (MkGLContext ptr) = foreign FFI_C "deleteGLContext" (Ptr -> IO ()) ptr                                                                  
+glSwapWindow : SDLWindow -> IO ()
+glSwapWindow (MkWindow ptr) = foreign FFI_C "SDL_GL_SwapWindow" (Ptr -> IO ()) ptr
+
+glMakeCurrent : SDLWindow -> SDLGLContext -> IO ()
+glMakeCurrent (MkWindow win) (MkGLContext ctx) = foreign FFI_C "glMakeCurrent" (Ptr -> Ptr -> IO ()) win ctx
+
+                                  

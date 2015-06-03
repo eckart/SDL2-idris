@@ -79,6 +79,13 @@ void setValue(int* arr, int idx, int val);
 void* ttfRenderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col);
 void renderTextSolid(SDL_Renderer* renderer, TTF_Font *font, const char *text, SDL_Color* col, int x, int y);
 
+// -----------------------------------------------------------------------------
+// GL 
 
+void* createGLContext(void* window);
+
+void deleteGLContext(void* ctx);
+
+void glMakeCurrent(void* win, void* ctx);
 
 #endif
