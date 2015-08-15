@@ -6,14 +6,21 @@
 #include <SDL2/SDL_video.h>
 #include <idris_rts.h>
 
+
+int initSDL() {
+  return SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+}
+
+
 void* createWindow(char* title, int xsize, int ysize) {
     SDL_Window *window;
-
+    /*
     if(SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0 )
     {
 	printf("Unable to init SDL2: %s\n", SDL_GetError());
 	return NULL;
     }
+    */
     //SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
     window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
 			   xsize, ysize, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_ALLOW_HIGHDPI);

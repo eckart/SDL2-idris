@@ -6,6 +6,8 @@
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <SDL2/SDL_ttf.h>
 
+int initSDL();
+
 // Start SDL, open a window with dimensions (x,y) - return the window
 void* createWindow(char* title, int xsize, int ysize);
 

@@ -40,6 +40,11 @@ record SDLRect where
   constructor MkRect
   ptr : Ptr
 
+public 
+initSDL : IO Int
+initSDL = foreign FFI_C "initSDL" (IO Int)
+
+
 public
 createWindow : String -> Int -> Int -> IO SDLWindow
 createWindow title x y = 
@@ -367,16 +372,110 @@ waitEvent
 abstract
 data SDLGLContext = MkGLContext Ptr
 
+public
 createGLContext : SDLWindow -> IO SDLGLContext
 createGLContext (MkWindow ptr) = do p <- foreign FFI_C "createGLContext" (Ptr -> IO Ptr) ptr
                                     pure $ MkGLContext p
   
+public
 deleteGLContext : SDLGLContext -> IO ()
 deleteGLContext (MkGLContext ptr) = foreign FFI_C "deleteGLContext" (Ptr -> IO ()) ptr                                                                  
+
+public
+glSetSwapInterval : Int -> IO ()
+glSetSwapInterval interval = foreign FFI_C "SDL_GL_SetSwapInterval" (Int -> IO ()) interval
+
+public
 glSwapWindow : SDLWindow -> IO ()
 glSwapWindow (MkWindow ptr) = foreign FFI_C "SDL_GL_SwapWindow" (Ptr -> IO ()) ptr
 
+public
 glMakeCurrent : SDLWindow -> SDLGLContext -> IO ()
 glMakeCurrent (MkWindow win) (MkGLContext ctx) = foreign FFI_C "glMakeCurrent" (Ptr -> Ptr -> IO ()) win ctx
 
-                                  
+
+public
+class SDLEnum a where
+  toSDLInt : a -> Int
+
+public                                                                    
+data SDLGlAttr =
+    SDL_GL_RED_SIZE
+  | SDL_GL_GREEN_SIZE
+  | SDL_GL_BLUE_SIZE
+  | SDL_GL_ALPHA_SIZE
+  | SDL_GL_BUFFER_SIZE
+  | SDL_GL_DOUBLEBUFFER
+  | SDL_GL_DEPTH_SIZE
+  | SDL_GL_STENCIL_SIZE
+  | SDL_GL_ACCUM_RED_SIZE
+  | SDL_GL_ACCUM_GREEN_SIZE
+  | SDL_GL_ACCUM_BLUE_SIZE
+  | SDL_GL_ACCUM_ALPHA_SIZE
+  | SDL_GL_STEREO
+  | SDL_GL_MULTISAMPLEBUFFERS
+  | SDL_GL_MULTISAMPLESAMPLES
+  | SDL_GL_ACCELERATED_VISUAL
+  | SDL_GL_RETAINED_BACKING
+  | SDL_GL_CONTEXT_MAJOR_VERSION
+  | SDL_GL_CONTEXT_MINOR_VERSION
+  | SDL_GL_CONTEXT_EGL
+  | SDL_GL_CONTEXT_FLAGS
+  | SDL_GL_CONTEXT_PROFILE_MASK
+  | SDL_GL_SHARE_WITH_CURRENT_CONTEXT
+  | SDL_GL_FRAMEBUFFER_SRGB_CAPABLE
+
+instance SDLEnum SDLGlAttr where
+   toSDLInt SDL_GL_RED_SIZE                    = 0x00000
+   toSDLInt SDL_GL_GREEN_SIZE                  = 0x00001
+   toSDLInt SDL_GL_BLUE_SIZE                   = 0x00002
+   toSDLInt SDL_GL_ALPHA_SIZE                  = 0x00003
+   toSDLInt SDL_GL_BUFFER_SIZE                 = 0x00004
+   toSDLInt SDL_GL_DOUBLEBUFFER                = 0x00005
+   toSDLInt SDL_GL_DEPTH_SIZE                  = 0x00006
+   toSDLInt SDL_GL_STENCIL_SIZE                = 0x00007
+   toSDLInt SDL_GL_ACCUM_RED_SIZE              = 0x00008
+   toSDLInt SDL_GL_ACCUM_GREEN_SIZE            = 0x00009
+   toSDLInt SDL_GL_ACCUM_BLUE_SIZE             = 0x00010
+   toSDLInt SDL_GL_ACCUM_ALPHA_SIZE            = 0x00011
+   toSDLInt SDL_GL_STEREO                      = 0x00012
+   toSDLInt SDL_GL_MULTISAMPLEBUFFERS          = 0x00013
+   toSDLInt SDL_GL_MULTISAMPLESAMPLES          = 0x00014
+   toSDLInt SDL_GL_ACCELERATED_VISUAL          = 0x00015
+   toSDLInt SDL_GL_RETAINED_BACKING            = 0x00016
+   toSDLInt SDL_GL_CONTEXT_MAJOR_VERSION       = 0x00017
+   toSDLInt SDL_GL_CONTEXT_MINOR_VERSION       = 0x00018
+   toSDLInt SDL_GL_CONTEXT_EGL                 = 0x00019
+   toSDLInt SDL_GL_CONTEXT_FLAGS               = 0x00020
+   toSDLInt SDL_GL_CONTEXT_PROFILE_MASK        = 0x00021
+   toSDLInt SDL_GL_SHARE_WITH_CURRENT_CONTEXT  = 0x00022
+   toSDLInt SDL_GL_FRAMEBUFFER_SRGB_CAPABLE    = 0x00023
+ 
+public                                                                    
+data SDLGlProfile =
+  SDL_GL_CONTEXT_PROFILE_CORE
+  | SDL_GL_CONTEXT_PROFILE_COMPATIBILITY
+  | SDL_GL_CONTEXT_PROFILE_ES
+
+instance SDLEnum SDLGlProfile where
+  toSDLInt   SDL_GL_CONTEXT_PROFILE_CORE           = 0x0001
+  toSDLInt   SDL_GL_CONTEXT_PROFILE_COMPATIBILITY  = 0x0002
+  toSDLInt   SDL_GL_CONTEXT_PROFILE_ES             = 0x0004
+
+public                                                                    
+data SDLGlContextFlag =
+  SDL_GL_CONTEXT_DEBUG_FLAG
+  | SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG
+  | SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG
+  | SDL_GL_CONTEXT_RESET_ISOLATION_FLAG
+
+instance SDLEnum SDLGlContextFlag where
+  toSDLInt  SDL_GL_CONTEXT_DEBUG_FLAG              = 0x0001
+  toSDLInt  SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG = 0x0002
+  toSDLInt  SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG      = 0x0004
+  toSDLInt  SDL_GL_CONTEXT_RESET_ISOLATION_FLAG    = 0x0008
+
+public
+glSetAttribute : SDLGlAttr -> Int -> IO ()
+glSetAttribute attr val = foreign FFI_C "SDL_GL_SetAttribute" (Int -> Int -> IO ()) (toSDLInt attr) val
+
