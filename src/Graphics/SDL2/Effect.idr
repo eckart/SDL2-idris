@@ -31,7 +31,7 @@ data Ttf : Effect where
   CloseFont  : Ttf () TTFCtx (\v => ())
   WithFont   : (TTFCtx -> IO a) -> Ttf a TTFCtx (\v => TTFCtx)
 
-instance Handler Sdl IO where
+implementation Handler Sdl IO where
   handle ()        (Initialise title width height) k = do ctx <- startSDL title width height
                                                           k () ctx
   handle (win, ren) Quit                           k = do endSDL win ren ; k () ()
@@ -52,11 +52,11 @@ TTF_ON : EFFECT
 TTF_ON = TTF TTFCtx
 
 
--- instance (Handler StdIO m, Handler System m) => Handler Logging ({
+-- implementation (Handler StdIO m, Handler System m) => Handler Logging ({
 --[STDIO, SYSTEM]} Eff () m) where
 --  handle ...
 
-instance Handler Ttf IO where
+implementation Handler Ttf IO where
   handle ()    (OpenFont font fontsize) k    = do ctx <- ttfOpenFont font fontsize
                                                   k () ctx
   handle font  CloseFont                k    = do ttfCloseFont font; k () ()

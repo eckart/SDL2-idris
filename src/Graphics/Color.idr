@@ -2,6 +2,8 @@ module Graphics.Color
 
 import Data.Fin
 
+%access public export
+
 ||| Type synonym for natural number up to 255
 Code8 : Type
 Code8 = Fin 256

@@ -1,2 +1,2 @@
-%flag C "-L/usr/local/lib -lSDL2"
-%flag C "-I/usr/local/include/SDL2 -D_THREAD_SAFE"
+%flag C "-L/usr/lib64 -lSDL2"
+%flag C "-I/usr/include/SDL2 -D_REENTRANT"
