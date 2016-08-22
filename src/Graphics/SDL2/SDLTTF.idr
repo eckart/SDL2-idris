@@ -10,9 +10,8 @@ import Graphics.SDL2.Config
 %link C "sdlrun2.o"
 %lib C "SDL2_ttf"
 
-%access public
+%access public export
 
-abstract 
 data SDLFont = MkFont Ptr
 
 
