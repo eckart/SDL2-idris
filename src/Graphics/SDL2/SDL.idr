@@ -5,9 +5,9 @@ import Graphics.Color
 import Graphics.SDL2.Config
 
 %include C "sdlrun2.h"
-%include C "SDL2/SDL.h"
-%include C "SDL2/SDL2_gfxPrimitives.h"
-%include C "SDL2/SDL_ttf.h"
+%include C "SDL.h"
+%include C "SDL2_gfxPrimitives.h"
+%include C "SDL_ttf.h"
 %link C "sdlrun2.o"
 %lib C "SDL2_gfx"
 %lib C "SDL2_ttf"
@@ -18,46 +18,46 @@ finToInt fn = fromInteger $ finToInteger fn
 
 -- Set up a window
 
-abstract 
+export
 data SDLWindow   = MkWindow Ptr
 
-public
+public export
 data SDLRenderer = MkRenderer Ptr
 
-public
+public export
 data SDLTexture = MkTexture Ptr
 
-public
+public export
 data SDLSurface = MkSurface Ptr
 
-public
+public export
 record SDLColor where
   constructor MkColor
   ptr : Ptr
 
-abstract 
+export
 record SDLRect where
   constructor MkRect
   ptr : Ptr
 
-public 
+export 
 initSDL : IO Int
 initSDL = foreign FFI_C "initSDL" (IO Int)
 
 
-public
+export
 createWindow : String -> Int -> Int -> IO SDLWindow
 createWindow title x y = 
   do ptr <- foreign FFI_C "createWindow" (String -> Int -> Int -> IO Ptr) title x y
-     return (MkWindow ptr)
+     pure (MkWindow ptr)
 
-public
+export
 createRenderer : SDLWindow -> IO SDLRenderer
 createRenderer (MkWindow win) = 
   do ptr <- foreign FFI_C "createRenderer" (Ptr -> IO Ptr) win
-     return (MkRenderer ptr)
+     pure (MkRenderer ptr)
 
-public
+export
 ttfGetError : IO String
 ttfGetError = foreign FFI_C "TTF_GetError" (IO String)
 
@@ -66,60 +66,60 @@ initTTF = do ret <- foreign FFI_C "TTF_Init" (IO (Int))
              if ret < 0 
              then do msg <- ttfGetError
                      putStrLn msg
-             else return () 
+             else pure () 
 
 ttfQuit : IO ()
 ttfQuit = foreign FFI_C "TTF_Quit" (IO ())  
      
      
-public 
+export 
 startSDL : String -> Int -> Int -> IO (SDLWindow, SDLRenderer)
 startSDL title width height = do win <- createWindow title width height
                                  ren <- createRenderer win
                                  initTTF
-                                 return (win, ren)
+                                 pure (win, ren)
 
-public
+export
 renderPresent : SDLRenderer -> IO ()
 renderPresent (MkRenderer r) = foreign FFI_C "renderPresent" (Ptr -> IO()) r
 
-public
+export
 renderCopy : SDLRenderer -> SDLTexture -> (src:SDLRect) -> (target:SDLRect) -> IO Int
 renderCopy (MkRenderer r) (MkTexture t) (MkRect src) (MkRect target)
   = foreign FFI_C "SDL_RenderCopy" (Ptr -> Ptr -> Ptr -> Ptr -> IO Int) r t src target
 
-public
+export
 quit : IO ()
 quit = foreign FFI_C "SDL_Quit" (IO ())
 
-public
+export
 endSDL : SDLWindow -> SDLRenderer -> IO ()
 endSDL (MkWindow win) (MkRenderer ren) = do ttfQuit
                                             foreign FFI_C "quit" (Ptr -> Ptr -> IO ()) win ren
 
 -- textures
 
-public
+export
 sdlCreateTextureFromSurface : SDLRenderer -> SDLSurface -> IO SDLTexture
 sdlCreateTextureFromSurface (MkRenderer r) (MkSurface s)
   = do ptr <- foreign FFI_C "SDL_CreateTextureFromSurface" (Ptr -> Ptr -> IO Ptr) r s
-       return (MkTexture ptr)
+       pure (MkTexture ptr)
 
-public
+export
 sdlFreeSurface : SDLSurface -> IO ()
 sdlFreeSurface (MkSurface srf) = foreign FFI_C "SDL_FreeSurface" (Ptr -> IO ()) srf
 
 -- structs
 
-public
+export
 color : Color -> IO SDLColor
 color (RGBA r g b a) = do ptr <- foreign FFI_C "color" (Int -> Int -> Int -> Int -> IO Ptr) r g b a
-                          return $ MkColor ptr
+                          pure $ MkColor ptr
 
-public 
+export 
 rect : (x:Int) -> (y:Int) -> (w:Int) -> (h:Int) -> IO SDLRect
 rect x y w h = do ptr <- foreign FFI_C "rect" (Int -> Int -> Int -> Int -> IO Ptr) x y w h
-                  return $ MkRect ptr
+                  pure $ MkRect ptr
                   
 -- array helper
 
@@ -133,7 +133,7 @@ setValue arr idx val = foreign FFI_C "setValue" (Ptr -> Int -> Int -> IO ()) arr
 
 private 
 packValues : Ptr -> Int -> List Int -> IO ()
-packValues arr i [] = return ()
+packValues arr i [] = pure ()
 packValues arr i (x :: xs) = 
   do setValue arr i x
      packValues arr (i + 1) xs
@@ -144,15 +144,15 @@ packList xs = do
   let len = toIntNat $ length xs
   arr <- newArray $ len
   packValues arr 0 xs
-  return arr
+  pure arr
 
-public 
+export 
 free : Ptr -> IO ()
 free ptr = foreign FFI_C "free" (Ptr -> IO ()) ptr
 
 -- Some drawing primitives
 
-public
+export
 filledRect : SDLRenderer -> Int -> Int -> Int -> Int ->
                            Int -> Int -> Int -> Int -> IO ()
 filledRect (MkRenderer ptr) x y w h r g b a 
@@ -160,7 +160,7 @@ filledRect (MkRenderer ptr) x y w h r g b a
            (Ptr -> Int -> Int -> Int -> Int ->
             Int -> Int -> Int -> Int -> IO ()) ptr x y w h r g b a
 
-public
+export
 filledEllipse : SDLRenderer -> Int -> Int -> Int -> Int ->
                               Int -> Int -> Int -> Int -> IO ()
 filledEllipse (MkRenderer ptr) x y rx ry r g b a 
@@ -168,7 +168,7 @@ filledEllipse (MkRenderer ptr) x y rx ry r g b a
            (Ptr -> Int -> Int -> Int -> Int ->
             Int -> Int -> Int -> Int -> IO ()) ptr x y rx ry r g b a
 
-public
+export
 drawLine : SDLRenderer -> Int -> Int -> Int -> Int ->
                          Int -> Int -> Int -> Int -> IO ()
 drawLine (MkRenderer ptr) x y ex ey r g b a 
@@ -176,7 +176,7 @@ drawLine (MkRenderer ptr) x y ex ey r g b a
            (Ptr -> Int -> Int -> Int -> Int ->
             Int -> Int -> Int -> Int -> IO ()) ptr x y ex ey r g b a
 
-public
+export
 filledTrigon : SDLRenderer -> Int -> Int -> Int -> Int -> Int -> Int ->
                          Int -> Int -> Int -> Int -> IO ()
 filledTrigon (MkRenderer ptr) x1 y1 x2 y2 x3 y3 r g b a 
@@ -185,7 +185,7 @@ filledTrigon (MkRenderer ptr) x1 y1 x2 y2 x3 y3 r g b a
             Int -> Int -> Int -> Int -> IO ()) ptr x1 y1 x2 y2 x3 y3 r g b a
 
 
-public
+export
 filledPolygon : SDLRenderer -> List Int -> List Int -> 
                               Int -> Int -> Int -> Int -> IO ()
 filledPolygon (MkRenderer ptr) xs ys r g b a = 
@@ -195,7 +195,7 @@ filledPolygon (MkRenderer ptr) xs ys r g b a =
     let len = toIntNat $ length xs
     foreign FFI_C "filledPolygon" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr xarr yarr len r g b a
 
-public
+export
 polygonAA : SDLRenderer -> List Int -> List Int -> 
                               Int -> Int -> Int -> Int -> IO ()
 polygonAA (MkRenderer ptr) xs ys r g b a = 
@@ -205,7 +205,7 @@ polygonAA (MkRenderer ptr) xs ys r g b a =
     let len = toIntNat $ length xs
     foreign FFI_C "polygonAA" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr xarr yarr len r g b a
 
-public
+export
 sdlBezier : SDLRenderer -> List Int -> List Int -> 
                               Int -> 
                               Int -> Int -> Int -> Int -> IO ()
@@ -217,19 +217,19 @@ sdlBezier (MkRenderer ptr) xs ys steps r g b a =
     foreign FFI_C "bezier" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> Int -> IO ()) 
                                    ptr xarr yarr len steps r g b a
 
-public 
+export
 sdlPixel : SDLRenderer -> Int -> Int ->
                        Int -> Int -> Int -> Int -> IO ()
 sdlPixel (MkRenderer ptr) x y r g b a 
   = foreign FFI_C "pixelRGBA" (Ptr -> Int -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr x y r g b a
 
 
-public
+export
 sdlSetRenderDrawColor : SDLRenderer -> Int -> Int -> Int -> Int -> IO ()
 sdlSetRenderDrawColor (MkRenderer ptr) r g b a = foreign FFI_C "SDL_SetRenderDrawColor" 
            (Ptr -> Int -> Int -> Int -> Int -> IO ()) ptr r g b a
 
-public
+export
 sdlRenderClear : SDLRenderer -> IO ()
 sdlRenderClear (MkRenderer ptr) = foreign FFI_C "SDL_RenderClear" (Ptr -> IO()) ptr
 
@@ -237,7 +237,7 @@ sdlRenderClear (MkRenderer ptr) = foreign FFI_C "SDL_RenderClear" (Ptr -> IO()) 
 -- TODO: More keys still to add... careful to do the right mappings in
 -- KEY in sdlrun.c
 
-public
+public export
 data Key = KeyUpArrow
          | KeyDownArrow
 	 | KeyLeftArrow
@@ -266,11 +266,13 @@ data Key = KeyUpArrow
          | KeyRCtrl
 	 | KeyAny Char
 	 
-instance Show Key where
+public export	 
+implementation Show Key where
   show (KeyAny c) = (show c)
   show _          = "special"
 
-instance Eq Key where
+public export	 
+implementation Eq Key where
   KeyUpArrow    == KeyUpArrow     = True
   KeyDownArrow  == KeyDownArrow   = True
   KeyLeftArrow  == KeyLeftArrow   = True
@@ -304,16 +306,17 @@ instance Eq Key where
   (KeyAny x)    == (KeyAny y)     = x == y
   _             == _              = False
 
-public
+public export	 
 data Button = Left | Middle | Right 
 
-instance Eq Button where
+public export	 
+implementation Eq Button where
   Left   == Left   = True
   Middle == Middle = True
   Right  == Right  = True
   _      == _      = False
 
-public
+public export	 
 data Event = KeyDown Key                        -- 0
            | KeyUp Key                          -- 1
            | MouseMotion Int Int Int Int        -- 2
@@ -325,7 +328,8 @@ data Event = KeyDown Key                        -- 0
 	   | WindowEvent                        -- 8
 
 
-instance Show Event where
+public export	 
+implementation Show Event where
   show (KeyDown k)               = "KeyDown " ++ (show k)
   show (KeyUp k)                 = "KeyUp " ++ (show k)
   show (MouseMotion x y dx dy)   = "MouseMotion"
@@ -336,7 +340,8 @@ instance Show Event where
   show AppQuit                   = "AppQuit"
   show WindowEvent               = "WindowEvent"
 
-instance Eq Event where
+public export	 
+implementation Eq Event where
   (KeyDown x) == (KeyDown y) = x == y
   (KeyUp x)   == (KeyUp y)   = x == y
   (MouseMotion x y rx ry) == (MouseMotion x' y' rx' ry')
@@ -351,54 +356,54 @@ instance Eq Event where
   WindowEvent    == WindowEvent     = True
   _              == _               = False
 
-public
+export
 pollEvent : IO (Maybe Event)
 pollEvent 
     = do MkRaw e <- 
-            foreign FFI_C "pollEvent" (Ptr -> IO (Raw (Maybe Event))) prim__vm
-         return e
+         foreign FFI_C "pollEvent" (Ptr -> IO (Raw (Maybe Event))) (prim__vm prim__TheWorld)
+         pure e
 
-public
+export
 waitEvent : IO (Maybe Event)
 waitEvent 
     = do MkRaw e <- 
-            foreign FFI_C "waitEvent" (Ptr -> IO (Raw (Maybe Event))) prim__vm
-         return e
+         foreign FFI_C "waitEvent" (Ptr -> IO (Raw (Maybe Event))) (prim__vm prim__TheWorld)
+         pure e
 
 
 -- ---------------------------------------------------------------------------
 -- GL 
 
-abstract
+export
 data SDLGLContext = MkGLContext Ptr
 
-public
+export
 createGLContext : SDLWindow -> IO SDLGLContext
 createGLContext (MkWindow ptr) = do p <- foreign FFI_C "createGLContext" (Ptr -> IO Ptr) ptr
                                     pure $ MkGLContext p
   
-public
+export
 deleteGLContext : SDLGLContext -> IO ()
 deleteGLContext (MkGLContext ptr) = foreign FFI_C "deleteGLContext" (Ptr -> IO ()) ptr                                                                  
 
-public
+export
 glSetSwapInterval : Int -> IO ()
 glSetSwapInterval interval = foreign FFI_C "SDL_GL_SetSwapInterval" (Int -> IO ()) interval
 
-public
+export
 glSwapWindow : SDLWindow -> IO ()
 glSwapWindow (MkWindow ptr) = foreign FFI_C "SDL_GL_SwapWindow" (Ptr -> IO ()) ptr
 
-public
+export
 glMakeCurrent : SDLWindow -> SDLGLContext -> IO ()
 glMakeCurrent (MkWindow win) (MkGLContext ctx) = foreign FFI_C "glMakeCurrent" (Ptr -> Ptr -> IO ()) win ctx
 
 
-public
-class SDLEnum a where
+public export
+interface SDLEnum a where
   toSDLInt : a -> Int
 
-public                                                                    
+public export                                                             
 data SDLGlAttr =
     SDL_GL_RED_SIZE
   | SDL_GL_GREEN_SIZE
@@ -425,7 +430,8 @@ data SDLGlAttr =
   | SDL_GL_SHARE_WITH_CURRENT_CONTEXT
   | SDL_GL_FRAMEBUFFER_SRGB_CAPABLE
 
-instance SDLEnum SDLGlAttr where
+public export
+implementation SDLEnum SDLGlAttr where
    toSDLInt SDL_GL_RED_SIZE                    = 0x00000
    toSDLInt SDL_GL_GREEN_SIZE                  = 0x00001
    toSDLInt SDL_GL_BLUE_SIZE                   = 0x00002
@@ -451,31 +457,33 @@ instance SDLEnum SDLGlAttr where
    toSDLInt SDL_GL_SHARE_WITH_CURRENT_CONTEXT  = 0x00022
    toSDLInt SDL_GL_FRAMEBUFFER_SRGB_CAPABLE    = 0x00023
  
-public                                                                    
+public export
 data SDLGlProfile =
   SDL_GL_CONTEXT_PROFILE_CORE
   | SDL_GL_CONTEXT_PROFILE_COMPATIBILITY
   | SDL_GL_CONTEXT_PROFILE_ES
 
-instance SDLEnum SDLGlProfile where
+public export
+implementation SDLEnum SDLGlProfile where
   toSDLInt   SDL_GL_CONTEXT_PROFILE_CORE           = 0x0001
   toSDLInt   SDL_GL_CONTEXT_PROFILE_COMPATIBILITY  = 0x0002
   toSDLInt   SDL_GL_CONTEXT_PROFILE_ES             = 0x0004
 
-public                                                                    
+public export                                                                    
 data SDLGlContextFlag =
   SDL_GL_CONTEXT_DEBUG_FLAG
   | SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG
   | SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG
   | SDL_GL_CONTEXT_RESET_ISOLATION_FLAG
 
-instance SDLEnum SDLGlContextFlag where
+public export
+implementation SDLEnum SDLGlContextFlag where
   toSDLInt  SDL_GL_CONTEXT_DEBUG_FLAG              = 0x0001
   toSDLInt  SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG = 0x0002
   toSDLInt  SDL_GL_CONTEXT_ROBUST_ACCESS_FLAG      = 0x0004
   toSDLInt  SDL_GL_CONTEXT_RESET_ISOLATION_FLAG    = 0x0008
 
-public
+export
 glSetAttribute : SDLGlAttr -> Int -> IO ()
 glSetAttribute attr val = foreign FFI_C "SDL_GL_SetAttribute" (Int -> Int -> IO ()) (toSDLInt attr) val
 

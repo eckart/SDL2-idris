@@ -5,14 +5,14 @@ import Graphics.SDL2.SDL
 import Graphics.SDL2.Config
 
 %include C "sdlrun2.h"
-%include C "SDL2/SDL.h"
-%include C "SDL2/SDL_ttf.h"
+%include C "SDL.h"
+%include C "SDL_ttf.h"
 %link C "sdlrun2.o"
 %lib C "SDL2_ttf"
 
-%access public
+%access public export
 
-abstract 
+export
 data SDLFont = MkFont Ptr
 
 
@@ -20,13 +20,14 @@ data SDLFont = MkFont Ptr
 ||| Some .fon fonts will have several sizes embedded in the file, so the
 ||| point size becomes the index of choosing which size.  If the value
 ||| is too high, the last indexed size will be the default.
+export
 ttfOpenFont : (fontname: String) -> (fontsize: Int) -> IO SDLFont
 ttfOpenFont fontname fontsize 
   = do ptr <- foreign FFI_C "TTF_OpenFont" (String -> Int -> IO Ptr) fontname fontsize
        np <- nullPtr ptr
        err <- ttfGetError
        putStrLn $ if np then fontname ++ " = null: " ++ err else fontname ++ " loaded"
-       return (MkFont ptr)
+       pure (MkFont ptr)
 
 --extern DECLSPEC TTF_Font * SDLCALL TTF_OpenFontIndex(const char *file, int ptsize, long index);
 --extern DECLSPEC TTF_Font * SDLCALL TTF_OpenFontRW(SDL_RWops *src, int freesrc, int ptsize);
@@ -42,17 +43,17 @@ ttfCloseFont (MkFont ptr) = foreign FFI_C "TTF_CloseFont" (Ptr -> IO ()) ptr
 |||   fast quality with the given font and color.  The 0 pixel is the
 |||   colorkey, giving a transparent background, and the 1 pixel is set
 |||   to the text color.
-|||   This function returns the new surface, or NULL if there was an error.
+|||   This function pures the new surface, or NULL if there was an error.
 ttfRenderTextSolid : SDLRenderer -> SDLFont -> String -> SDLColor -> IO SDLTexture
 ttfRenderTextSolid (MkRenderer r) (MkFont f) txt (MkColor c) 
   = do ptr <- foreign FFI_C "ttfRenderTextSolid" (Ptr -> Ptr -> String -> Ptr -> IO Ptr) r f txt c 
-       return (MkTexture ptr)
+       pure (MkTexture ptr)
 
 renderTextSolid : SDLRenderer -> SDLFont -> String -> Color -> Int -> Int -> IO ()
 renderTextSolid (MkRenderer r) (MkFont f) txt col x y
   = do (MkColor c) <- color col
        foreign FFI_C "renderTextSolid" (Ptr -> Ptr -> String -> Ptr -> Int -> Int -> IO ()) r f txt c x y
-       return ()
+       pure ()
 
 --extern DECLSPEC SDL_Surface * SDLCALL TTF_RenderUTF8_Solid(TTF_Font *font, const char *text, SDL_Color fg);
 --extern DECLSPEC SDL_Surface * SDLCALL TTF_RenderUNICODE_Solid(TTF_Font *font, const Uint16 *text, SDL_Color fg);

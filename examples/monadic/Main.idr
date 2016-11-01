@@ -16,7 +16,7 @@ draw r = do sdlSetRenderDrawColor r 255 255 255 255 -- background
             renderPresent r
             ttfCloseFont font
 
-            return ()
+            pure ()
 
 -- -------------------------------------------------------------------------------------------------
 -- Main loop
@@ -35,7 +35,7 @@ main = do (win,renderer) <- startSDL "test" 800 600
           eventLoop r = do 
                            e <- pollEvent
                            case e of 
-                             Just AppQuit => return ()
+                             Just AppQuit => pure ()
                              Just event => do handle r event
                                               --putStrLn $ "event" ++ (show event)
                                               eventLoop r

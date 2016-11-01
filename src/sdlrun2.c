@@ -1,9 +1,9 @@
 #include <stdio.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
-#include <SDL2/SDL_ttf.h>
-#include <SDL2/SDL_syswm.h>
-#include <SDL2/SDL_video.h>
+#include <SDL.h>
+#include <SDL2_gfxPrimitives.h>
+#include <SDL_ttf.h>
+#include <SDL_syswm.h>
+#include <SDL_video.h>
 #include <idris_rts.h>
 
 
