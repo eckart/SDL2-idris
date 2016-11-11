@@ -15,6 +15,89 @@ import Graphics.SDL2.Config
 implicit finToInt : Fin n -> Int
 finToInt fn = fromInteger $ finToInteger fn
 
+public export
+interface SDLEnum a where
+  toSDLInt : a -> Int
+
+public export
+data SDLTextureAccess = 
+  ||| Changes rarely, not lockable
+  SDL_TEXTUREACCESS_STATIC |
+  ||| Changes frequently, lockable
+  SDL_TEXTUREACCESS_STREAMING |
+  SDL_TEXTUREACCESS_TARGET
+
+public export
+implementation SDLEnum SDLTextureAccess where
+  toSDLInt SDL_TEXTUREACCESS_STATIC    = 0
+  toSDLInt SDL_TEXTUREACCESS_STREAMING = 1
+  toSDLInt SDL_TEXTUREACCESS_TARGET    = 2
+
+public export
+data SDLPixelFormat = 
+    SDL_PIXELFORMAT_UNKNOWN
+    | SDL_PIXELFORMAT_INDEX1LSB 
+    | SDL_PIXELFORMAT_INDEX1MSB
+    | SDL_PIXELFORMAT_INDEX4LSB
+    | SDL_PIXELFORMAT_INDEX4MSB
+    | SDL_PIXELFORMAT_INDEX8
+    | SDL_PIXELFORMAT_RGB332
+    | SDL_PIXELFORMAT_RGB444
+    | SDL_PIXELFORMAT_RGB555
+    | SDL_PIXELFORMAT_BGR555
+    | SDL_PIXELFORMAT_ARGB4444
+    | SDL_PIXELFORMAT_RGBA4444
+    | SDL_PIXELFORMAT_ABGR4444
+    | SDL_PIXELFORMAT_BGRA4444
+    | SDL_PIXELFORMAT_ARGB1555
+    | SDL_PIXELFORMAT_RGBA5551
+    | SDL_PIXELFORMAT_ABGR1555
+    | SDL_PIXELFORMAT_BGRA5551
+    | SDL_PIXELFORMAT_RGB565
+    | SDL_PIXELFORMAT_BGR565
+    | SDL_PIXELFORMAT_RGB24
+    | SDL_PIXELFORMAT_BGR24
+    | SDL_PIXELFORMAT_RGB888
+    | SDL_PIXELFORMAT_RGBX8888
+    | SDL_PIXELFORMAT_BGR888
+    | SDL_PIXELFORMAT_BGRX8888
+    | SDL_PIXELFORMAT_ARGB8888
+    | SDL_PIXELFORMAT_RGBA8888
+    | SDL_PIXELFORMAT_ABGR8888
+    | SDL_PIXELFORMAT_BGRA8888
+
+public export
+implementation SDLEnum SDLPixelFormat where
+  toSDLInt SDL_PIXELFORMAT_UNKNOWN   = 0
+  toSDLInt SDL_PIXELFORMAT_INDEX1LSB = 1 
+  toSDLInt SDL_PIXELFORMAT_INDEX1MSB = 2
+  toSDLInt SDL_PIXELFORMAT_INDEX4LSB = 3
+  toSDLInt SDL_PIXELFORMAT_INDEX4MSB = 4
+  toSDLInt SDL_PIXELFORMAT_INDEX8    = 5
+  toSDLInt SDL_PIXELFORMAT_RGB332    = 6
+  toSDLInt SDL_PIXELFORMAT_RGB444    = 7
+  toSDLInt SDL_PIXELFORMAT_RGB555    = 8
+  toSDLInt SDL_PIXELFORMAT_BGR555    = 9
+  toSDLInt SDL_PIXELFORMAT_ARGB4444  = 10
+  toSDLInt SDL_PIXELFORMAT_RGBA4444  = 11
+  toSDLInt SDL_PIXELFORMAT_ABGR4444  = 12
+  toSDLInt SDL_PIXELFORMAT_BGRA4444  = 13
+  toSDLInt SDL_PIXELFORMAT_ARGB1555  = 14
+  toSDLInt SDL_PIXELFORMAT_RGBA5551  = 15
+  toSDLInt SDL_PIXELFORMAT_ABGR1555  = 16
+  toSDLInt SDL_PIXELFORMAT_BGRA5551  = 17
+  toSDLInt SDL_PIXELFORMAT_RGB565    = 18
+  toSDLInt SDL_PIXELFORMAT_BGR565    = 19
+  toSDLInt SDL_PIXELFORMAT_RGB24     = 20
+  toSDLInt SDL_PIXELFORMAT_BGR24     = 21
+  toSDLInt SDL_PIXELFORMAT_RGB888    = 22
+  toSDLInt SDL_PIXELFORMAT_RGBX8888  = 23
+  toSDLInt SDL_PIXELFORMAT_BGR888    = 24
+  toSDLInt SDL_PIXELFORMAT_BGRX8888  = 25
+  toSDLInt SDL_PIXELFORMAT_ARGB8888  = 26
+  toSDLInt SDL_PIXELFORMAT_RGBA8888  = 27
+  toSDLInt SDL_PIXELFORMAT_ABGR8888  = 28
+  toSDLInt SDL_PIXELFORMAT_BGRA8888  = 29
 
 -- Set up a window
 
@@ -89,6 +172,11 @@ renderCopy (MkRenderer r) (MkTexture t) (MkRect src) (MkRect target)
   = foreign FFI_C "SDL_RenderCopy" (Ptr -> Ptr -> Ptr -> Ptr -> IO Int) r t src target
 
 export
+renderCopyFull : SDLRenderer -> SDLTexture -> IO Int
+renderCopyFull (MkRenderer r) (MkTexture t) 
+  = foreign FFI_C "SDL_RenderCopy" (Ptr -> Ptr -> Ptr -> Ptr -> IO Int) r t prim__null prim__null
+
+export
 quit : IO ()
 quit = foreign FFI_C "SDL_Quit" (IO ())
 
@@ -104,6 +192,14 @@ sdlCreateTextureFromSurface : SDLRenderer -> SDLSurface -> IO SDLTexture
 sdlCreateTextureFromSurface (MkRenderer r) (MkSurface s)
   = do ptr <- foreign FFI_C "SDL_CreateTextureFromSurface" (Ptr -> Ptr -> IO Ptr) r s
        pure (MkTexture ptr)
+
+export
+sdlCreateTexture : SDLRenderer -> (format : SDLPixelFormat) -> (access : SDLTextureAccess) -> (width: Int) -> (height: Int) -> IO SDLTexture
+sdlCreateTexture (MkRenderer r) format access width height
+  = do f <-foreign FFI_C "idr_get_pixel_format" (Int -> IO Int) (toSDLInt format)
+       ptr <- foreign FFI_C "SDL_CreateTexture" (Ptr -> Int -> Int -> Int -> Int -> IO Ptr) r f (toSDLInt access) width height
+       pure (MkTexture ptr)
+
 
 export
 sdlFreeSurface : SDLSurface -> IO ()
@@ -371,6 +467,19 @@ waitEvent
          pure e
 
 
+public export
+data TextureRaw = MkTextureRaw Ptr Int
+
+export
+lockTexture : SDLTexture -> IO TextureRaw
+lockTexture (MkTexture t) = do MkRaw tr <- foreign FFI_C "idr_lock_texture" (Ptr -> Ptr -> IO (Raw TextureRaw)) t (prim__vm prim__TheWorld)
+                               pure tr
+
+export
+unlockTexture : SDLTexture -> IO ()
+unlockTexture (MkTexture t) = do foreign FFI_C "SDL_UnlockTexture" (Ptr -> IO ()) t
+
+
 -- ---------------------------------------------------------------------------
 -- GL 
 
@@ -398,10 +507,6 @@ export
 glMakeCurrent : SDLWindow -> SDLGLContext -> IO ()
 glMakeCurrent (MkWindow win) (MkGLContext ctx) = foreign FFI_C "glMakeCurrent" (Ptr -> Ptr -> IO ()) win ctx
 
-
-public export
-interface SDLEnum a where
-  toSDLInt : a -> Int
 
 public export                                                             
 data SDLGlAttr =

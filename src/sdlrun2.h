@@ -8,6 +8,11 @@
 
 int initSDL();
 
+// enums
+
+int idr_get_pixel_format(int i);
+
+
 // Start SDL, open a window with dimensions (x,y) - return the window
 void* createWindow(char* title, int xsize, int ysize);
 
@@ -18,6 +23,9 @@ void renderPresent(void* s_in);
 
 // quit sdl and cleanup
 void quit(void* window, void* renderer);
+
+
+void* idr_lock_texture(SDL_Texture* texture, VM* vm);
 
 // Events
 void* pollEvent(VM* vm); // builds an Idris value

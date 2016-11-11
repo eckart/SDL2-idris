@@ -11,6 +11,44 @@ int initSDL() {
   return SDL_Init(SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_AUDIO);
 }
 
+int idr_get_pixel_format(int i) {
+  int result = 0;
+  switch (i) {
+  case 0: result = SDL_PIXELFORMAT_UNKNOWN; break;
+  case 1: result = SDL_PIXELFORMAT_INDEX1LSB; break; 
+  case 2: result = SDL_PIXELFORMAT_INDEX1MSB; break;
+  case 3: result = SDL_PIXELFORMAT_INDEX4LSB; break;
+  case 4: result = SDL_PIXELFORMAT_INDEX4MSB ; break;
+  case 5: result = SDL_PIXELFORMAT_INDEX8; break;
+  case 6: result = SDL_PIXELFORMAT_RGB332; break;
+  case 7: result = SDL_PIXELFORMAT_RGB444; break;
+  case 8: result = SDL_PIXELFORMAT_RGB555; break;
+  case 9: result = SDL_PIXELFORMAT_BGR555; break;
+  case 10: result = SDL_PIXELFORMAT_ARGB4444; break;
+  case 11: result = SDL_PIXELFORMAT_RGBA4444; break;
+  case 12: result = SDL_PIXELFORMAT_ABGR4444; break;
+  case 13: result = SDL_PIXELFORMAT_BGRA4444; break;
+  case 14: result = SDL_PIXELFORMAT_ARGB1555; break;
+  case 15: result = SDL_PIXELFORMAT_RGBA5551; break;
+  case 16: result = SDL_PIXELFORMAT_ABGR1555; break;
+  case 17: result = SDL_PIXELFORMAT_BGRA5551; break;
+  case 18: result = SDL_PIXELFORMAT_RGB565; break;
+  case 19: result = SDL_PIXELFORMAT_BGR565; break;
+  case 20: result = SDL_PIXELFORMAT_RGB24; break;
+  case 21: result = SDL_PIXELFORMAT_BGR24; break;
+  case 22: result = SDL_PIXELFORMAT_RGB888; break;
+  case 23: result = SDL_PIXELFORMAT_RGBX8888; break;
+  case 24: result = SDL_PIXELFORMAT_BGR888; break;
+  case 25: result = SDL_PIXELFORMAT_BGRX8888; break;
+  case 26: result = SDL_PIXELFORMAT_ARGB8888; break;
+  case 27: result = SDL_PIXELFORMAT_RGBA8888; break;
+  case 28: result = SDL_PIXELFORMAT_ABGR8888; break;
+  case 29: result = SDL_PIXELFORMAT_BGRA8888; break;
+     
+  }
+
+  return result;
+}
 
 void* createWindow(char* title, int xsize, int ysize) {
     SDL_Window *window;
@@ -228,6 +266,27 @@ void setValue(int* arr, int idx, int val)
 //
 
 
+/*
+
+ */
+VAL idr_lock_texture(SDL_Texture* texture, VM* vm) {
+  VAL m;
+
+  void *pixels;
+  int pitch;
+  SDL_LockTexture(texture, NULL, &pixels, &pitch);  
+
+  idris_requireAlloc(128); // Conservative!
+
+  idris_constructor(m, vm, 0, 0, 0);
+  idris_setConArg(m, 0, MKPTR(vm, pixels));
+  idris_setConArg(m, 1, MKINT((intptr_t) pitch));
+  idris_doneAlloc(vm);
+
+  return m;
+}
+
+
 VAL MOTION(VM* vm, int x, int y, int relx, int rely) {
     VAL m;
     idris_constructor(m, vm, 2, 4, 0);
@@ -388,6 +447,7 @@ void* processEvent(VM* vm, int r, SDL_Event * e) {
   SDL_Event event = *e;
   idris_requireAlloc(128); // Conservative!
 
+
   if (r==0) {
     idris_constructor(idris_event, vm, 0, 0, 0); // Nothing
   }
@@ -420,7 +480,7 @@ void* processEvent(VM* vm, int r, SDL_Event * e) {
 	ievent = RESIZE(vm, event.window.data1, event.window.data2);
 	break;
       default:
-	// TODO: other window events
+	// TODO: other window event
 	idris_constructor(ievent, vm, 8, 0, 0);
       }
       break;
