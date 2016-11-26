@@ -71,6 +71,27 @@ void* createWindow(char* title, int xsize, int ysize) {
     return (void*) window;
 }
 
+int idr_GetWindowWidth(void* win) {
+  SDL_Window* window = (SDL_Window*) win;
+  int width;
+  int height;
+
+  SDL_GetWindowSize(window, &width, &height);
+
+  return width;
+}
+
+int idr_GetWindowHeight(void* win) {
+  SDL_Window* window = (SDL_Window*) win;
+  int width;
+  int height;
+
+  SDL_GetWindowSize(window, &width, &height);
+
+  return height;
+}
+
+
 void* createGLContext(void* window) {
   SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
   SDL_GLContext glcontext = SDL_GL_CreateContext(window);

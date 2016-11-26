@@ -102,6 +102,10 @@ poll : { [SDL_ON] } Eff (Maybe Event)
 poll = call Poll
 
 public export
+getSdlCtx : { [SDL_ON] } Eff SDLCtx
+getSdlCtx = call $ WithContext pure
+
+public export
 getRenderer : { [SDL_ON] } Eff SDLRenderer
 getRenderer = call $ WithContext (\(win,ren) => pure ren)
 

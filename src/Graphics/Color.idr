@@ -15,6 +15,16 @@ data Color : Type where
   ||| @ blue  value of the blue component
   ||| @ alpha value of the alpha channel
   RGBA : (red : Code8) -> (green : Code8) -> (blue:Code8) -> (alpha: Code8) -> Color
+  
+private
+implicit code8ToDouble : Code8 -> Double
+code8ToDouble f = (cast (finToInteger f) / 256.0)
+
+
+export
+implicit colorToDoubles : Color -> (Double, Double, Double, Double)
+colorToDoubles (RGBA red green blue alpha) = (red, green, blue, alpha)
+
 
 export
 white : Color

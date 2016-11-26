@@ -16,6 +16,10 @@ int idr_get_pixel_format(int i);
 // Start SDL, open a window with dimensions (x,y) - return the window
 void* createWindow(char* title, int xsize, int ysize);
 
+int idr_GetWindowWidth(void* win);
+int idr_GetWindowHeight(void* win);
+
+
 // create a renderer for the window
 void* createRenderer(void* window);
 

@@ -134,6 +134,13 @@ createWindow title x y =
   do ptr <- foreign FFI_C "createWindow" (String -> Int -> Int -> IO Ptr) title x y
      pure (MkWindow ptr)
 
+export 
+getWindowSize : SDLWindow -> IO (Int, Int)
+getWindowSize (MkWindow win) = 
+  do w <- foreign FFI_C "idr_GetWindowWidth" (Ptr -> IO Int) win
+     h <- foreign FFI_C "idr_GetWindowHeight" (Ptr -> IO Int) win
+     pure (w, h)
+
 export
 createRenderer : SDLWindow -> IO SDLRenderer
 createRenderer (MkWindow win) = 
