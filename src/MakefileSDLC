@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -std=c99
 CFLAGS = `idris --include` `sdl2-config --cflags`
 
 sdlrun2.o: config sdlrun2.c sdlrun2.h
