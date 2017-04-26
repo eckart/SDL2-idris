@@ -302,7 +302,7 @@ VAL idr_lock_texture(SDL_Texture* texture, VM* vm) {
   idris_constructor(m, vm, 0, 0, 0);
   idris_setConArg(m, 0, MKPTR(vm, pixels));
   idris_setConArg(m, 1, MKINT((intptr_t) pitch));
-  idris_doneAlloc(vm);
+  idris_doneAlloc();
 
   return m;
 }
@@ -510,14 +510,14 @@ void* processEvent(VM* vm, int r, SDL_Event * e) {
       break;
     default:
       idris_constructor(idris_event, vm, 0, 0, 0); // Nothing
-      idris_doneAlloc(vm);
+      idris_doneAlloc();
       return idris_event;
     }
     idris_constructor(idris_event, vm, 1, 1, 0);
     idris_setConArg(idris_event, 0, ievent); // Just ievent
   }
   
-  idris_doneAlloc(vm);
+  idris_doneAlloc();
   return idris_event;
 }
 
