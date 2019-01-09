@@ -192,6 +192,19 @@ endSDL : SDLWindow -> SDLRenderer -> IO ()
 endSDL (MkWindow win) (MkRenderer ren) = do ttfQuit
                                             foreign FFI_C "quit" (Ptr -> Ptr -> IO ()) win ren
 
+export
+sdlSetRenderDrawColor : SDLRenderer -> Int -> Int -> Int -> Int -> IO ()
+sdlSetRenderDrawColor (MkRenderer ptr) r g b a = foreign FFI_C "SDL_SetRenderDrawColor" 
+           (Ptr -> Int -> Int -> Int -> Int -> IO ()) ptr r g b a
+
+export
+sdlRenderClear : SDLRenderer -> IO ()
+sdlRenderClear (MkRenderer ptr) = foreign FFI_C "SDL_RenderClear" (Ptr -> IO()) ptr
+
+export 
+free : Ptr -> IO ()
+free ptr = foreign FFI_C "free" (Ptr -> IO ()) ptr
+
 -- textures
 
 export
@@ -224,119 +237,6 @@ rect : (x:Int) -> (y:Int) -> (w:Int) -> (h:Int) -> IO SDLRect
 rect x y w h = do ptr <- foreign FFI_C "rect" (Int -> Int -> Int -> Int -> IO Ptr) x y w h
                   pure $ MkRect ptr
                   
--- array helper
-
-private 
-newArray : Int -> IO (Ptr)
-newArray len = foreign FFI_C "newArray" (Int -> IO (Ptr)) len
-
-private 
-setValue : Ptr -> Int -> Int -> IO ()
-setValue arr idx val = foreign FFI_C "setValue" (Ptr -> Int -> Int -> IO ()) arr idx val
-
-private 
-packValues : Ptr -> Int -> List Int -> IO ()
-packValues arr i [] = pure ()
-packValues arr i (x :: xs) = 
-  do setValue arr i x
-     packValues arr (i + 1) xs
-
-private 
-packList : List Int -> IO (Ptr)
-packList xs = do 
-  let len = toIntNat $ length xs
-  arr <- newArray $ len
-  packValues arr 0 xs
-  pure arr
-
-export 
-free : Ptr -> IO ()
-free ptr = foreign FFI_C "free" (Ptr -> IO ()) ptr
-
--- Some drawing primitives
-
-export
-filledRect : SDLRenderer -> Int -> Int -> Int -> Int ->
-                           Int -> Int -> Int -> Int -> IO ()
-filledRect (MkRenderer ptr) x y w h r g b a 
-      = foreign FFI_C "boxRGBA"
-           (Ptr -> Int -> Int -> Int -> Int ->
-            Int -> Int -> Int -> Int -> IO ()) ptr x y w h r g b a
-
-export
-filledEllipse : SDLRenderer -> Int -> Int -> Int -> Int ->
-                              Int -> Int -> Int -> Int -> IO ()
-filledEllipse (MkRenderer ptr) x y rx ry r g b a 
-      = foreign FFI_C "filledEllipse"
-           (Ptr -> Int -> Int -> Int -> Int ->
-            Int -> Int -> Int -> Int -> IO ()) ptr x y rx ry r g b a
-
-export
-drawLine : SDLRenderer -> Int -> Int -> Int -> Int ->
-                         Int -> Int -> Int -> Int -> IO ()
-drawLine (MkRenderer ptr) x y ex ey r g b a 
-      = foreign FFI_C "drawLine"
-           (Ptr -> Int -> Int -> Int -> Int ->
-            Int -> Int -> Int -> Int -> IO ()) ptr x y ex ey r g b a
-
-export
-filledTrigon : SDLRenderer -> Int -> Int -> Int -> Int -> Int -> Int ->
-                         Int -> Int -> Int -> Int -> IO ()
-filledTrigon (MkRenderer ptr) x1 y1 x2 y2 x3 y3 r g b a 
-      = foreign FFI_C "filledTrigon"
-           (Ptr -> Int -> Int -> Int -> Int -> Int -> Int ->
-            Int -> Int -> Int -> Int -> IO ()) ptr x1 y1 x2 y2 x3 y3 r g b a
-
-
-export
-filledPolygon : SDLRenderer -> List Int -> List Int -> 
-                              Int -> Int -> Int -> Int -> IO ()
-filledPolygon (MkRenderer ptr) xs ys r g b a = 
-  do 
-    xarr <- packList xs
-    yarr <- packList ys
-    let len = toIntNat $ length xs
-    foreign FFI_C "filledPolygon" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr xarr yarr len r g b a
-
-export
-polygonAA : SDLRenderer -> List Int -> List Int -> 
-                              Int -> Int -> Int -> Int -> IO ()
-polygonAA (MkRenderer ptr) xs ys r g b a = 
-  do 
-    xarr <- packList xs
-    yarr <- packList ys
-    let len = toIntNat $ length xs
-    foreign FFI_C "polygonAA" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr xarr yarr len r g b a
-
-export
-sdlBezier : SDLRenderer -> List Int -> List Int -> 
-                              Int -> 
-                              Int -> Int -> Int -> Int -> IO ()
-sdlBezier (MkRenderer ptr) xs ys steps r g b a = 
-  do 
-    xarr <- packList xs
-    yarr <- packList ys
-    let len = toIntNat $ length xs
-    foreign FFI_C "bezier" (Ptr -> Ptr -> Ptr -> Int -> Int -> Int -> Int -> Int -> Int -> IO ()) 
-                                   ptr xarr yarr len steps r g b a
-
-export
-sdlPixel : SDLRenderer -> Int -> Int ->
-                       Int -> Int -> Int -> Int -> IO ()
-sdlPixel (MkRenderer ptr) x y r g b a 
-  = foreign FFI_C "pixelRGBA" (Ptr -> Int -> Int -> Int -> Int -> Int -> Int -> IO ()) ptr x y r g b a
-
-
-export
-sdlSetRenderDrawColor : SDLRenderer -> Int -> Int -> Int -> Int -> IO ()
-sdlSetRenderDrawColor (MkRenderer ptr) r g b a = foreign FFI_C "SDL_SetRenderDrawColor" 
-           (Ptr -> Int -> Int -> Int -> Int -> IO ()) ptr r g b a
-
-export
-sdlRenderClear : SDLRenderer -> IO ()
-sdlRenderClear (MkRenderer ptr) = foreign FFI_C "SDL_RenderClear" (Ptr -> IO()) ptr
-
-
 -- TODO: More keys still to add... careful to do the right mappings in
 -- KEY in sdlrun.c
 

@@ -1,9 +1,11 @@
 module Graphics.SDL2.Effect
 
 import Data.Fin
+import Data.Vect
 import Effects
 import Graphics.Color
 import public Graphics.SDL2.SDL
+import public Graphics.SDL2.SDLGFX
 import public Graphics.SDL2.SDLTTF
 
 public export
@@ -117,7 +119,7 @@ pixel (RGBA r g b a) (x,y)
 public export
 rectangle : Color -> Int -> Int -> Int -> Int -> { [SDL_ON] } Eff () 
 rectangle (RGBA r g b a) x y w h 
-    = call $ WithContext (\(_,s) => filledRect s x y w h (toInt r) (toInt g) (toInt b) (toInt a))
+    = call $ WithContext (\(_,s) => filledRectangle s x y w h (toInt r) (toInt g) (toInt b) (toInt a))
 
 public export
 ellipse : Color -> Int -> Int -> Int -> Int -> { [SDL_ON] } Eff () 
@@ -127,23 +129,23 @@ ellipse (RGBA r g b a) x y rx ry
 public export
 line : Color -> Int -> Int -> Int -> Int -> { [SDL_ON] } Eff () 
 line (RGBA r g b a) x y ex ey 
-    = call $ WithContext (\(_,s) => drawLine s x y ex ey (toInt r) (toInt g) (toInt b) (toInt a))
+    = call $ WithContext (\(_,s) => strokeLine s x y ex ey (toInt r) (toInt g) (toInt b) (toInt a))
 
 public export
 polygon : Color -> List (Int, Int) -> { [SDL_ON] } Eff () 
 polygon (RGBA r g b a) points 
     = do 
-         let xs = map fst points
-         let ys = map snd points
+         let xs = map fst $ fromList points
+         let ys = map snd $ fromList points
          call $ WithContext (\(_,s) => filledPolygon s xs ys (toInt r) (toInt g) (toInt b) (toInt a))
 
 public export
 bezier : Color -> List (Int, Int) -> Int -> { [SDL_ON] } Eff () 
 bezier (RGBA r g b a) points steps
     = do 
-         let xs = map fst points
-         let ys = map snd points
-         call $ WithContext (\(_,s) => sdlBezier s xs ys steps (toInt r) (toInt g) (toInt b) (toInt a))
+         let xs = map fst $ fromList points
+         let ys = map snd $ fromList points
+         call $ WithContext (\(_,s) => strokeBezier s xs ys steps (toInt r) (toInt g) (toInt b) (toInt a))
 
 public export
 triangle : Color -> (Int, Int) -> (Int, Int) -> (Int, Int) -> { [SDL_ON] } Eff () 
