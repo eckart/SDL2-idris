@@ -40,36 +40,17 @@ void* waitEvent(VM* vm); // builds an Idris value
 void* color(int r, int g, int b, int a);
 void* rect(int x, int y, int w, int h);
 
-// Drawing primitives
-
-void pixel(void *s_in,
-	   int x, int y,
-	   int r, int g, int b, int a);
-
-void filledRect(void *s,
-	        int x, int y, int w, int h,
-	        int r, int g, int b, int a);
-
-void filledEllipse(void* s_in,
-		   int x, int y, int rx, int ry,
-                   int r, int g, int b, int a);
-void drawLine(void* s_in,
-	      int x, int y, int ex, int ey,
-	      int r, int g, int b, int a);
-
-void filledTrigon(void* s_in,
-		  int x1, int y1,
-		  int x2, int y2,
-		  int x3, int y3,
-		  int r, int g, int b, int a);
-
 // these are really needed
 
 void filledPolygon(void* s_in,
 		   int* xs, int* ys, int n,
 		   int r, int g, int b, int a);
 
-void polygonAA(void* s_in,
+void strokePolygon(void* s_in,
+		   int* xs, int* ys, int n,
+		   int r, int g, int b, int a);
+
+void strokeAAPolygon(void* s_in,
 	       int* xs, int* ys, int n,
 	       int r, int g, int b, int a);
 

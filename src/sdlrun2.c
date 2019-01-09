@@ -160,55 +160,28 @@ void* rect(int x, int y, int w, int h) {
   return rect;
 }
 
-// -----------------------------------------------------------------------------
-// drawing - may not be needed after all...
-//
-void pixel(void *s_in,
-	   int x, int y,
-	   int r, int g, int b, int a) 
-{
-    SDL_Renderer* s = (SDL_Renderer*)s_in;
-    pixelRGBA(s, x, y, r, g, b, a);
-}
-
-void filledRect(void *s_in,
-	        int x, int y, int w, int h,
-	        int r, int g, int b, int a) 
-{
-    SDL_Renderer* s = (SDL_Renderer*)s_in;
-    boxRGBA(s, x, y, x+w, y+h, r, g, b, a);
-}
-
-void filledEllipse(void* s_in,
-		   int x, int y, int rx, int ry,
-                   int r, int g, int b, int a) 
-{
-    SDL_Renderer* s = (SDL_Renderer*)s_in;
-    filledEllipseRGBA(s, x, y, rx, ry, r, g, b, a);
-}
-
-void drawLine(void* s_in,
-	      int x, int y, int ex, int ey,
-	      int r, int g, int b, int a) 
-{
-    SDL_Renderer* s = (SDL_Renderer*)s_in;
-    lineRGBA(s, x, y, ex, ey, r, g, b, a);
-}
-
-
-void filledTrigon(void* s_in,
-		  int x1, int y1,
-		  int x2, int y2,
-		  int x3, int y3,
-		  int r, int g, int b, int a)
-{
-    SDL_Renderer* s = (SDL_Renderer*)s_in;
-    filledTrigonRGBA(s, x1, y1, x2, y2, x3, y3, r, g, b, a);
-}
 
 // --------------------------------------------------------------------
 // 
 //
+
+void strokePolygon(void* s_in, int* xs, int* ys, int n, int r, int g, int b, int a)
+{
+    SDL_Renderer* s = (SDL_Renderer*)s_in;
+    short u[n];
+    short v[n];
+    for (int i = 0; i < n ; i++) {
+      u[i] = xs[i];
+      v[i] = ys[i];
+    }
+    free(xs);
+    free(ys);
+    polygonRGBA(s,
+		      u, v,
+		      n,
+		      r, g, b, a);
+
+}
 
 void filledPolygon(void* s_in, int* xs, int* ys, int n, int r, int g, int b, int a)
 {
@@ -229,7 +202,7 @@ void filledPolygon(void* s_in, int* xs, int* ys, int n, int r, int g, int b, int
 
 }
 
-void polygonAA(void* s_in, int* xs, int* ys, int n, int r, int g, int b, int a)
+void strokeAAPolygon(void* s_in, int* xs, int* ys, int n, int r, int g, int b, int a)
 {
     SDL_Renderer* s = (SDL_Renderer*)s_in;
     short u[n];
