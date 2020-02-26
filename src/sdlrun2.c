@@ -297,7 +297,7 @@ VAL idr_lock_texture(SDL_Texture* texture, VM* vm) {
   int pitch;
   SDL_LockTexture(texture, NULL, &pixels, &pitch);  
 
-  idris_requireAlloc(128); // Conservative!
+  idris_requireAlloc(vm, 128); // Conservative!
 
   idris_constructor(m, vm, 0, 0, 0);
   idris_setConArg(m, 0, MKPTR(vm, pixels));
@@ -466,7 +466,7 @@ void* processEvent(VM* vm, int r, SDL_Event * e) {
   VAL idris_event;
 
   SDL_Event event = *e;
-  idris_requireAlloc(128); // Conservative!
+  idris_requireAlloc(vm, 128); // Conservative!
 
 
   if (r==0) {
